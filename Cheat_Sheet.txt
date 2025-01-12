@@ -1,0 +1,464 @@
+Python Dataframes
+A dataframe is a two-dimentional data structure, i.e. data is a tabular fashion in rows and columns. Dataframes consistis of three principal components, the data, rows, and columns.
+
+Pandas Dataframes
+Pandas is one of the most used open-source Python libraries to work with Structured tabular data for analysis. Pandas library is heavlly ised for Data Analytics, Machine learning, data science projects, and many more. Useful Pandas online resources: https://sparkbyexamples.com/python-pandas-tutorial-for-beginners/ or https://pandas.pydata.org/docs/
+
+Spark Dataframes
+PySpark is a Spark library written in Python to run Python applications using Apache Spark capabilities. Using PySpark we can run applications parallelly on the distributed cluster(multi nodes) or even on a single node. Useful PySpark online resources: https://sparkbyexamples.com/pyspark-tutorial/ or https://spark.apache.org/docs/latest/api/python/index.html
+
+PySpark Advantages
+PySpark is a general-purpose, in-memory, distributed processing engine that allows you to process data efficiently in a distributed fashion.
+Applications running on PySpark are 100x faster thatn tranditional systems.
+Using PySpark we can process data from Hadoop HDFS, AWS S3, and many files systems.
+PySpark natively has machine learning and graph libraries.
+PySpark Advantages
+Using Pandas API on PySpark enables data scientists and data engineers who have prior knowledge of pandas more productive by running the pandas DataFrame API on PySpark by utilizing its capabilities and running pandas operations 10x faster for big data sets. Useful PySpark.Pandas online resource: https://spark.apache.org/docs/latest/api/python/reference/pyspark.pandas/index.html
+
+https://www.youtube.com/watch?v=XEi-0lGYj0o&t=144s
+
+Creating a Pandas Dataframe
+Does have the ability to import and export from workbench (AWS S3),but it requires additional packages and other requirements
+
+# Import Pandas Package
+import pandas as pd
+
+# Import Spark Pandas Package
+import pyspark.pandas as ps
+
+import numpy as np
+
+from pyspark.sql.functions import count, col, when, sum
+from pyspark.sql.types import BooleanType, IntegerType, StringType
+from pyspark.sql import functions as F
+from pyspark.sql import Window
+
+# Create Dictionary with lists for data
+data = { 'First_Name' : ['Jordan', 'Aaron','Elgton', 'Christian', ' Kenny', 'Rashan', 'Quay', 'Jaire'],
+        'Last_Name':['Love', 'Jones', 'Jenkins', 'Watson', 'Clark', 'Gary', 'Walker', 'Alexander'],
+        'Position':['QB', 'RB', 'OL', 'WR', 'DL', 'OLB', 'ILB', ' CB'],
+        'College':['Nevada', 'UTEP', 'Mississipi St', 'North Dakota St', 'UCLA', 'Michigan', 'Georgia', 'Loisville']}
+
+# Print Dictionary
+print(data)
+
+
+# Convert Dictionary to Pandas Dataframe
+pd_df = pd.DataFrame(data)
+
+# Print Pandas Dataframe
+print(pd_df)
+
+
+# Display Pandas Dataframe
+pd_df.display()
+
+Creating a Spark Dataframe
+Allows us the ability to query direcly from Hive or import and export from workbench (AWS S3)
+
+%sql
+show tables
+
+# Pull Data from Hive Table into Spark Dataframe
+sp_df = spark.sql("SELECT * FROM default.test")
+
+# Print Top 5 Records of Spark Dataframe
+sp_df.show(n=5)
+
+# Display Spark Dataframe (limit to 10,000 rows)
+sp_df.display()
+
+sp_df.write.mode("overwrite").saveAsTable("default.test3")
+
+# write a spark dataframe to Teradata
+# database = "ABC"
+# tblName = "a"
+# df.write.format("jdbc").option("url","jdbc:teradata://TDPROD/Database=ABC, LOGMECH=LDAP") \
+#                        .option("driver","com.teradata.jdbc.TeraDriver") \
+#                        .option("dbtable","{}.{}".format(database, tblName)) \
+#                        .option("user",username) \
+#                        .option("password",password) \ 
+#                        .option("overwrite") \
+#                        .save()
+
+# Import CSV File from Workbench (AWS S3)
+# aws_df = spark.read.format('csv').options(header='true').load('s3://***/a.csv')
+
+# Display Spark DataFrame
+# aws_df.display()
+
+# Export Spark Dataframe as CSV File to Worknech( AWS S3)
+# aws_df.write.options(header='true', compression='none').mode("overwrite").csv('s3://***/a.csv')
+
+# If Spark Dataframe is small, then use coalesce(1) option
+# aws_df.coalesce(1).write.options(header='true', compression='none').mode("overwrite").csv('s3://***/a.csv')
+
+Converting Dataframes
+# Convert Pandas DataFrame to Spark Dataframe
+new_sp_df = spark.createDataFrame(pd_df)
+print(type(new_sp_df))
+
+# Convert Pandas DataFrame to Spark Pandas Dataframe
+new_ps_df = ps.from_pandas(pd_df)
+print(type(new_ps_df))
+
+# Convert Spark Dataframe to Pandas DataFrame to (Not recommended with large data)
+#new_pd_df = aws_df.toPandas()
+new_pd_df = new_sp_df.toPandas()
+print(type(new_pd_df))
+
+# Convert Spark Dataframe to Spark Pandas Dataframe
+#new_ps_df2 = aws_df.pandas_api()
+new_ps_df2 = new_sp_df.pandas_api()
+print(type(new_ps_df2))
+
+# Convert Spark Pandas DataFrame to Spark Dataframe
+#new_sp_df2 = ps_df.to_spark()
+new_sp_df2 = new_ps_df.to_spark()
+print(type(new_sp_df2))
+
+# Convert Spark Pandas DataFrame to Pandas Spark Dataframe(Not recommended with large data)
+# new_pd_df2 = ps_df.to_pandas()
+new_pd_df2 = new_ps_df.to_pandas()
+print(type(new_pd_df2))
+
+
+Working with Dataframe
+How to wrangle, mainpulate, clean and aggregate data
+
+%sql
+--REFRESH TABLE default.billionaires;
+
+# Create Final Spark DataFrame (table created via Catalog based on csv)
+# sp_df = spark.read.format('csv').options(header='true').load('s3://***/billionaires.csv')
+
+sp_df = spark.sql("SELECT * FROM default.billionaires")
+
+print(type(sp_df))
+sp_df.display()
+
+# Create Final Pandas Spark DataFrame (table created via Catalog based on csv)
+# ps_df = ps.read_csv('s3://***/billionaires.csv')
+ps_df = sp_df.pandas_api()
+
+print(type(ps_df))
+ps_df.display()
+
+Limit columns
+# create a list of required columns
+cols_to_keep = [
+    'name',
+    'rank',	
+    'year',
+    #'company_founded',
+    #'company_name',
+    #'company_relationship',
+    #'company_sector',
+    #'company_type',
+    #'demographics_age',
+    #'demographics_gender',
+    #'location_citizenship',
+    #'location_country code',
+    #'location_gdp',
+    #'location_region',
+    #'wealth_type',
+    #'wealth_worth in billions',
+    #'wealth_how_category',
+    #'wealth_how_from emerging',
+    #'wealth_how_industry',
+    #'wealth_how_inherited',
+    #'wealth_how_was founder',
+    #'wealth_how_was political'
+]
+
+# select required columns
+df = sp_df.select(*cols_to_keep)
+df.display()
+
+Clean columns' names in a loop
+for col in sp_df.columns:
+    sp_df = sp_df.withColumnRenamed(col, col.replace(' ','_').replace('.','_').replace('(','_').replace(')','_').lower())
+
+
+Viewing Dataframe Schema Information
+# View Shape (number of obs and cols) of Spark Dataframe
+print(sp_df.count(), len(sp_df.columns) ) 
+
+# View Information (all fields, type and null counts) of Spark Dataframe 
+sp_df.select([count(when(col(c).isNull(), c)).alias(c) for c in sp_df.columns ]).display()
+sp_df.printSchema()
+
+# View Shape (number of obs and cols) of Spark Pandas Dataframe 
+print(ps_df.shape)
+
+# View Information (all fields, type and non-null counts) of Spark Pandas Dataframe 
+print(ps_df.info())
+
+# Modify Spark Dataframe Fields
+sp_df_mod = sp_df.withColumn('rank', sp_df['rank'].cast(IntegerType())) \
+    .withColumn('wealth_worth in billions', sp_df['wealth_worth in billions'].cast(IntegerType())) \
+    .withColumn('wealth_how_was political', sp_df['wealth_how_was political'].cast(BooleanType())) \
+
+print(sp_df.count(), len(sp_df.columns)) 
+
+sp_df_mod.printSchema()
+
+
+# create a temp data variable with date type
+# df = df.withColumn("data_temp", F.to_date("data","dd/MM/yyyy"))
+
+# create a begining of the month variable with date type
+# df = df.withColumn("data_month_start", F.trunc("data_temp","month"))
+ 
+# delete temporary variable
+# df = df.drop("data_temp") 
+
+# convert data_month_start to string format
+# df = df.withColumn("data_month_start", df["data_month_start"].cast(StringType()))
+
+
+Running Summary Statistics on Dataframes
+# Describe Spark Dataframe - Summary Statistics opn All Columns
+sp_df_mod.summary().display()
+
+# https://stackoverflow.com/questions/71209619/pandas-groupby-and-apply-aggregate-function-across-rows
+sp_df_mod.groupBy(F.col("rank")). \
+    pivot("year"). \
+    agg(F.sum("wealth_worth in billions")).\
+    display()
+
+# Describe Spark Pandas Dataframe - Summary Statistics on Numeric Columns
+ps_df.describe()
+
+
+Creating Categorical Distribiution Output on Dataframe(selectExpr)
+# Run Distributions on Character Columns in Spark Dataframe
+
+# Create List of Character Columns Wanted
+char_vars = ['company_sector','demographics_age','demographics_gender']
+
+# Loop Through Character Columns to Create Distributions
+for char in char_vars:
+    # Calucate Count and Percent, to see number of rows for nulls use agg(count(sp_df.name).alias('Frequency'))
+    result = sp_df.groupBy(char).agg(count(char).alias('Frequency')).selectExpr('*', 'round(100 * Frequency / sum(Frequency) over(), 2)  Percent')
+
+    # Display Distribution Spark Dataframe
+    result.orderBy(char).display()
+
+# Run Distributions on Character Columns in Spark Pandas Dataframe
+
+# Create List of Character Columns Wanted
+char_vars = ['company_sector','demographics_age','demographics_gender']
+
+# Loop Through Character Columns to Create Distributions
+for char in char_vars:
+    # Gather Count by Index
+    df_freq = ps_df[char].value_counts().sort_index()
+
+    # Put Count into Spark Pandas Dataframe
+    df_disp = ps.DataFrame({
+        char: df_freq.index.to_numpy(),
+        'Frequency': df_freq.values,
+        'Percent': ((df_freq.values/df_freq.values.sum())*100).round(2)
+    }) 
+    
+    # Display Distribution Spark Dataframe
+    df_disp.display()
+
+
+Sorting Dataframes
+# Sorting a Spark Dataframe by Single Column
+sp_df_mod.sort("wealth_worth in billions").display()
+
+# Sorting a Spark Pandas Dataframe by Single Column
+ps_df.sort_values(by="wealth_worth in billions").display()
+
+# Creating a New Spark Pandas Dataframe by Sorting a Spark Pandas Dataframe by Multiple Columns
+#sp_df_sort = sp_df_mod.sort(sp_df_mod['company_sector'].asc(),sp_df_mod['demographics_age'].desc()) 
+sp_df_sort = sp_df_mod.sort(sp_df_mod.company_sector.asc(),sp_df_mod.demographics_age.desc()) 
+
+sp_df_sort.display()
+# Creating a New Spark Pandas Dataframe by Sorting a Spark Pandas by Multiple Columns
+ps_df_sort = ps_df.sort_values(by=['company_sector', 'demographics_age'], ascending = [True, False]) 
+
+ps_df_sort.display()
+
+Removing Duplicate Observation from Dataframes
+# Removing Duplicates in a Spark Dataframe
+sp_df_dedup = sp_df_sort.dropDuplicates(['company_sector'])
+
+sp_df_dedup.display()
+
+# Removing Duplicates in a Spark Pandas Dataframe
+ps_df_dedup = ps_df_sort.drop_duplicates(['company_sector'], keep = 'first')
+
+ps_df_dedup.display()
+
+Window function
+## Take max company_founded by year
+w = Window.partitionBy("year")
+sp_df_dedup2 = sp_df_dedup.withColumn("max_rank", F.max("rank").over(w))
+
+sp_df_dedup2.where(F.col("rank") == F.col("max_rank")).select(["year","rank","max_rank"]).display()
+
+
+Creating New Columns in Dataframes
+# Create New Binary Column in Spark Dataframe
+sp_df_mod.withColumn('age65', F.when(sp_df_mod.demographics_age >=65, 1).otherwise(0)). \
+    select(['name','rank', 'demographics_age', 'age65']). \
+        show(n=10)
+
+# Create New Binary Column in Spark Pandas Dataframe
+ps_df.loc[ps_df['demographics_age']>=65, 'age65'] = 1
+ps_df.loc[ps_df['demographics_age']< 65, 'age65'] = 0
+
+ps_df[['name','rank', 'demographics_age', 'age65']].head(10)
+
+# Create New Spark Dataframe with New Categorical Column in Spark Dataframe
+sp_df_age = sp_df_mod.withColumn('age_bucket', F.when((F.col('demographics_age') < 30), '< 30') \
+                                                 .when((F.col('demographics_age') >= 30) & (F.col('demographics_age') < 50 ), ' 30 - 49') \
+                                                 .when((F.col('demographics_age') >= 50) & (F.col('demographics_age') < 65 ), ' 50 - 64') \
+                                                 .when((F.col('demographics_age') >= 65) & (F.col('demographics_age') < 80 ), ' 65 - 79') \
+                                                 .otherwise('>= 80'))
+
+sp_df_age.select(['name','rank', 'demographics_age', 'age_bucket']).show(n=10)
+
+# Copy Spark Pandas Dataframe to New Spark Pandas Dataframe
+ps_df_age = ps_df.copy()
+
+# Apply Logic to Create New Categotical Column in Spark Pandas Dataframe
+ps_df_age.loc[ps_df_age['demographics_age'] <  30, 'age_bucket'] = '< 30'
+ps_df_age.loc[(ps_df_age['demographics_age'] >= 30) & (ps_df_age['demographics_age'] < 50), 'age_bucket'] = '30-49'
+ps_df_age.loc[(ps_df_age['demographics_age'] >= 50) & (ps_df_age['demographics_age'] < 65), 'age_bucket'] = '50-64'
+ps_df_age.loc[(ps_df_age['demographics_age'] >= 65) & (ps_df_age['demographics_age'] < 80), 'age_bucket'] = '65-79'
+ps_df_age.loc[(ps_df_age['demographics_age'] >= 80), 'age_bucket'] = '>= 80'
+
+ps_df_age[['name','rank', 'demographics_age', 'age_bucket']].head(10)
+
+Filtering Dataframe
+
+# Filter Spark Dataframe and Keep Certain Columns
+sp_df_filter = sp_df_age.filter(sp_df_age.age_bucket == '>= 80').select(['name','rank', 'demographics_age', 'age_bucket'])
+
+sp_df_filter.display()
+
+# Filter Spark Pandas Dataframe and Keep Certain Columns
+ps_df_filter = ps_df_age[['name','rank', 'demographics_age', 'age_bucket']].loc[ps_df_age['age_bucket'] == '>= 80' ]
+
+ps_df_filter.display()
+
+
+Appending and Merging DataFrames
+# Filter Spark Dataframe and Keep Certain Columns
+sp_df_filter2 = sp_df_age.filter(sp_df_age.age_bucket != '>= 80').select(['name','rank', 'demographics_age', 'age_bucket'])
+
+# Append Spark Dataframe
+sp_df_combine = sp_df_filter.union(sp_df_filter2)
+
+sp_df_combine.display()
+
+# Filter Spark Pandas Dataframe and Keep Certain Columns
+ps_df_filter2 = ps_df_age[['name','rank', 'demographics_age', 'age_bucket']].loc[ps_df_age['age_bucket'] != '>= 80' ]
+
+# Append Spark Pandas Dataframe
+ps_df_combine = ps_df_filter.append(ps_df_filter2)
+
+ps_df_combine.display()
+
+# Create Dictionary with Lists for data1
+data1 = {'category': ['A','B','C','D'],
+         'number':list(range(1,5))}
+
+# Create Dictionary with Lists for data2
+data2 = {'category': ['A','C','E','F'],
+         'color':['red','blue','yellow','black']}
+
+print(data1)
+print(data2)
+
+# Create New Spark Pandas Dataframes
+df_ps1 = ps.DataFrame(data1)
+df_ps2 = ps.DataFrame(data2)
+
+print(type(df_ps1))
+print(type(df_ps2))
+
+# Create New Spark Dataframes
+df_sp1 = df_ps1.to_spark()
+df_sp2 = df_ps2.to_spark()
+
+print(type(df_sp1))
+print(type(df_sp2))
+
+Inner Join Merge
+# Merge Spark Dataframes with INNER Join
+df_sp_inner = df_sp1.join(df_sp2, df_sp1.category == df_sp2.category, "inner")
+df_sp_inner.display()
+
+# Merge Spark Dataframes with INNER Join - Drop Duplicate Column
+df_sp_inner = df_sp1.join(df_sp2, df_sp1.category == df_sp2.category, "inner") \
+    .drop(df_sp2.category)
+df_sp_inner.display()
+
+# Merge Spark Pandas Dataframes with INNER Join - Automatically Coalesces 'ON' Column
+df_ps_inner = ps.merge(df_ps1, df_ps2, on='category', how="inner")
+df_sp_inner.display()
+
+Left Join Merge
+# Merge Spark Dataframes with LEFT Join
+df_sp_left = df_sp1.join(df_sp2, df_sp1.category == df_sp2.category, "left")
+df_sp_left .display()
+
+# Merge Spark Dataframes with LEFT Join - Drop Duplicate Column and Set NULL to Diffrent Value
+df_sp_left  = df_sp1.join(df_sp2, df_sp1.category == df_sp2.category, "left") \
+    .drop(df_sp2.category) \
+        .na.fill(value='pink', subset=['color'])
+df_sp_left .display()
+
+
+Full/Outer Join Merge
+# Merge Spark Dataframes with FULL Join
+df_sp_full = df_sp1.join(df_sp2, df_sp1.category == df_sp2.category, "full")
+df_sp_full.display()
+
+# Merge Spark Dataframes with FULL Join - Coalesce Category
+df_sp_full = df_sp1.join(df_sp2, df_sp1.category == df_sp2.category, "full") \
+    .withColumn('new_category', F.coalesce(df_sp1.category,df_sp2.category)) \
+    .na.fill(value='pink', subset=['color']) \
+    .na.fill(value=9, subset=['number']) \
+    .select(['new_category', 'number', 'color' ]) 
+    
+df_sp_full.display()
+
+# Merge Spark Dataframes with FULL Join
+df_sp_full = df_sp1.join(df_sp2, df_sp1.category == df_sp2.category, "full")
+df_sp_full.display()
+
+# Merge Spark Dataframes with FULL Join - Coalesce Category
+df_sp_full = df_sp1.join(df_sp2, df_sp1.category == df_sp2.category, "full") \
+    .withColumn('new_category', F.coalesce(df_sp1.category,df_sp2.category)) \
+    .na.fill(value='pink', subset=['color']) \
+    .na.fill(value=9, subset=['number']) \
+    .select(['new_category', 'number', 'color' ]) 
+    
+df_sp_full.display()
+
+# Merge Spark Pandas Dataframes with OUTER Join - Automatically Coalesces 'ON' Column
+df_ps_full = ps.merge(df_ps1, df_ps2, on='category', how="outer")
+df_ps_full.display()
+
+# Merge Spark Pandas Dataframes with OUTER Join 
+df_ps_full  = ps.merge(df_ps1, df_ps2, on='category', how="outer")
+df_ps_full['color'] = df_ps_full['color'].fillna('pink')
+df_ps_full['number'] = df_ps_full['number'].fillna(9)
+df_ps_full.display()
+
+
+
+
+
+
+
+
+
+
